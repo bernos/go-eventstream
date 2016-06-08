@@ -1,16 +1,12 @@
 package stream
 
-func FromChannel(ch chan Event) (Stream, CloseFunc) {
+func FromChannel(ch chan Event) (Stream, CancelFunc) {
 	ack := make(chan struct{})
 
 	s := &stream{
 		done:   make(chan struct{}),
 		events: ch,
 	}
-
-	s.close = doneSignalerWithCallback(s, func() {
-		<-ack
-	})
 
 	go func() {
 		defer func() {
@@ -20,13 +16,15 @@ func FromChannel(ch chan Event) (Stream, CloseFunc) {
 		<-s.done
 	}()
 
-	return s, s.close
+	return s, doneSignalerWithCallback(s, func() {
+		<-ack
+	})
 }
 
-func NewStream() (Stream, CloseFunc) {
+func NewStream() (Stream, CancelFunc) {
 	var (
-		ack = make(chan struct{})
-		s   = newStream(ack)
+		ack       = make(chan struct{})
+		s, cancel = newStream(ack)
 	)
 
 	go func() {
@@ -37,24 +35,24 @@ func NewStream() (Stream, CloseFunc) {
 		<-s.done
 	}()
 
-	return s, s.close
+	return s, cancel
 }
 
 func Once(value interface{}) Stream {
-	s, cls := NewStream()
+	s, cancel := NewStream()
 
 	go func() {
-		defer cls()
+		defer cancel()
 		s.SendValue(value)
 	}()
 
 	return s
 }
 
-func FromPoll(fn func() (interface{}, error)) (Stream, CloseFunc) {
+func FromPoll(fn func() (interface{}, error)) (Stream, CancelFunc) {
 	var (
-		ack = make(chan struct{})
-		in  = newStream(ack)
+		ack        = make(chan struct{})
+		in, cancel = newStream(ack)
 	)
 
 	go func() {
@@ -72,13 +70,13 @@ func FromPoll(fn func() (interface{}, error)) (Stream, CloseFunc) {
 		}
 	}()
 
-	return in, in.close
+	return in, cancel
 }
 
-func FromSlice(xs []interface{}) (Stream, CloseFunc) {
+func FromSlice(xs []interface{}) (Stream, CancelFunc) {
 	var (
-		ack = make(chan struct{})
-		in  = newStream(ack)
+		ack        = make(chan struct{})
+		in, cancel = newStream(ack)
 	)
 
 	go func() {
@@ -96,13 +94,13 @@ func FromSlice(xs []interface{}) (Stream, CloseFunc) {
 		}
 	}()
 
-	return in, in.close
+	return in, cancel
 }
 
-func RepeatSlice(xs []interface{}) (Stream, CloseFunc) {
+func RepeatSlice(xs []interface{}) (Stream, CancelFunc) {
 	var (
-		ack = make(chan struct{})
-		in  = newStream(ack)
+		ack        = make(chan struct{})
+		in, cancel = newStream(ack)
 	)
 
 	go func() {
@@ -123,23 +121,21 @@ func RepeatSlice(xs []interface{}) (Stream, CloseFunc) {
 		}
 	}()
 
-	return in, in.close
+	return in, cancel
 }
 
-func newStream(ack chan struct{}) *stream {
+func newStream(ack chan struct{}) (*stream, CancelFunc) {
 	in := &stream{
 		done:   make(chan struct{}),
 		events: make(chan Event),
 	}
 
-	in.close = doneSignalerWithCallback(in, func() {
+	return in, doneSignalerWithCallback(in, func() {
 		<-ack
 	})
-
-	return in
 }
 
-func doneSignalerWithCallback(s *stream, fn func()) CloseFunc {
+func doneSignalerWithCallback(s *stream, fn func()) CancelFunc {
 	isDone := false
 
 	return func() {

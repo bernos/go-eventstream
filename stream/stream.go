@@ -1,41 +1,53 @@
 package stream
 
-// CloseFunc is a function that closes a stream
-type CloseFunc func()
+// CancelFunc is a function that closes a stream
+type CancelFunc func()
 
 // Stream represents a continuous stream of Events
 type Stream interface {
-	Events() <-chan Event
-	// Done() <-chan struct{}
-	// Map(Mapper) (Stream, CloseFunc)
-	// PMap(Mapper, int) (Stream, CloseFunc)
+	InputStream
+	OutputStream
+}
+
+type InputStream interface {
 	Send(interface{}, error)
 	SendError(error)
 	SendEvent(Event)
 	SendValue(interface{})
-	// Transform(Transformer) (Stream, CloseFunc)
+}
+
+type OutputStream interface {
+	Events() <-chan Event
+	FlatMap(FlatMapper) Stream
+	PFlatMap(FlatMapper, int) Stream
+	Map(Mapper) Stream
+	PMap(Mapper, int) Stream
+	Transform(Transformer) Stream
 }
 
 type stream struct {
 	done   chan struct{}
 	events chan Event
-	close  CloseFunc
 }
-
-// func (s *stream) Done() <-chan struct{} {
-// 	return s.done
-// }
 
 func (s *stream) Events() <-chan Event {
 	return s.events
 }
 
-func (s *stream) Map(m Mapper) (Stream, CloseFunc) {
-	return Map(m).Transform(s), s.close
+func (s *stream) FlatMap(m FlatMapper) Stream {
+	return FlatMap(m).Transform(s)
 }
 
-func (s *stream) PMap(m Mapper, n int) (Stream, CloseFunc) {
-	return PMap(m, n).Transform(s), s.close
+func (s *stream) PFlatMap(m FlatMapper, n int) Stream {
+	return PFlatMap(m, n).Transform(s)
+}
+
+func (s *stream) Map(m Mapper) Stream {
+	return Map(m).Transform(s)
+}
+
+func (s *stream) PMap(m Mapper, n int) Stream {
+	return PMap(m, n).Transform(s)
 }
 
 func (s *stream) Send(value interface{}, err error) {
@@ -54,6 +66,6 @@ func (s *stream) SendValue(value interface{}) {
 	s.SendEvent(NewEvent(value, nil))
 }
 
-func (s *stream) Transform(t Transformer) (Stream, CloseFunc) {
-	return t.Transform(s), s.close
+func (s *stream) Transform(t Transformer) Stream {
+	return t.Transform(s)
 }

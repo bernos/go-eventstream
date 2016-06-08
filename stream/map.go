@@ -1,8 +1,6 @@
 package stream
 
-import (
-	"sync"
-)
+import "sync"
 
 type Mapper interface {
 	Map(value interface{}) (interface{}, error)
@@ -50,6 +48,106 @@ func PMap(m Mapper, n int) Transformer {
 			defer cls()
 			wg.Wait()
 		}()
+
+		return out
+	})
+}
+
+func Loop(start Stream, cancel CancelFunc, shouldContinue func() bool) Transformer {
+	return TransformFunc(func(in Stream) Stream {
+		var (
+			wg       sync.WaitGroup
+			out, cls = NewStream()
+			feedback = make(chan Event)
+			done     = make(chan struct{})
+		)
+
+		// Read from in and send to out. Also send to feedback chan
+		// if there was no error
+		wg.Add(1)
+		go func() {
+			defer func() {
+				wg.Done()
+				cls()
+				close(done)
+			}()
+
+			for e := range in.Events() {
+
+				if e.Error() == nil {
+					wg.Add(1)
+					go func(e Event) {
+						defer wg.Done()
+						select {
+						case <-done:
+							return
+						case feedback <- e:
+						}
+					}(e)
+				}
+			}
+		}()
+
+		// Read from feedback ch, and send back to
+		// start stream
+		go func() {
+			defer cancel()
+
+			for e := range feedback {
+				if !shouldContinue() {
+					return
+				}
+
+				select {
+				case <-done:
+					return
+				default:
+					start.SendEvent(e)
+					out.SendEvent(e)
+				}
+			}
+		}()
+
+		go func() {
+			defer close(feedback)
+			wg.Wait()
+		}()
+
+		// Read from feedback ch, and send back to
+		// start stream
+		// go func() {
+
+		// 	for {
+		// 		time.Sleep(time.Nanosecond)
+
+		// 		select {
+		// 		case <-done:
+		// 			return
+		// 		case e := <-feedback:
+		// 		}
+		// 	}
+		// }()
+
+		// Read from feedback ch, and send back to
+		// start stream
+		// go func() {
+
+		// 	for {
+		// 		select {
+		// 		case <-done:
+		// 			return
+		// 		case e := <-feedback:
+		// 			go func(e Event) {
+		// 				select {
+		// 				case <-done:
+		// 					return
+		// 				default:
+		// 					start.SendEvent(e)
+		// 				}
+		// 			}(e)
+		// 		}
+		// 	}
+		// }()
 
 		return out
 	})
