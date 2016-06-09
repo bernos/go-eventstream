@@ -2,9 +2,7 @@ package stream
 
 import (
 	"fmt"
-	"math"
 	"testing"
-	"testing/quick"
 )
 
 type IntMapper func(int) int
@@ -89,38 +87,5 @@ func TestMapViaStream(t *testing.T) {
 		}
 	} else {
 		t.Errorf("Expected int but got %v", got.Value())
-	}
-}
-
-func TestLoop(t *testing.T) {
-
-	assert := func(n int) bool {
-		in, cancel := NewStream()
-		numRepeats := int(math.Abs(float64(n % 100)))
-		count := 0
-
-		shouldContinue := func() bool {
-			return count < numRepeats
-		}
-
-		out := Loop(in, cancel, shouldContinue).Transform(in)
-
-		go func() {
-			in.SendValue(1)
-		}()
-
-		for _ = range out.Events() {
-			count++
-		}
-
-		if count != numRepeats {
-			t.Errorf("Expected %d, got %d", numRepeats, count)
-		}
-
-		return true
-	}
-
-	if err := quick.Check(assert, nil); err != nil {
-		t.Error(err)
 	}
 }
