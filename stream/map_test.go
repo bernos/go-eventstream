@@ -92,6 +92,8 @@ func TestMapViaStream(t *testing.T) {
 	}
 }
 
+// TODO: Need a non-quick.check version of this test to demonstrate manually running
+// TODO: Need the old version of Loop that doesnt use the shouldContinue sync func
 func TestLoop(t *testing.T) {
 
 	assert := func(n int) bool {
