@@ -33,7 +33,7 @@ func TestRepeat(t *testing.T) {
 	config := &quick.Config{
 		MaxCount: 100,
 	}
-	// assert(5)
+
 	if err := quick.Check(assert, config); err != nil {
 		t.Error(err)
 	}

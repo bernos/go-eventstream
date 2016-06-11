@@ -18,10 +18,10 @@ type InputStream interface {
 
 type OutputStream interface {
 	Events() <-chan Event
-	FlatMap(FlatMapper) Stream
-	PFlatMap(FlatMapper, int) Stream
-	Map(Mapper) Stream
-	PMap(Mapper, int) Stream
+	// FlatMap(FlatMapper) Stream
+	// PFlatMap(FlatMapper, int) Stream
+	// Map(Mapper) Stream
+	// PMap(Mapper, int) Stream
 	Transform(Transformer) Stream
 }
 

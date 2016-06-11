@@ -16,22 +16,19 @@ func Repeat(initialValue interface{}, transformer Transformer) (Stream, CancelFu
 	output := transformer.Transform(input)
 
 	cancel := func() {
-		defer func() {
-			cancelInput()
-			cancelEcho()
-		}()
+		defer cancelEcho()
 		close(done)
 		<-ack
 	}
 
+	wg.Add(1)
 	go func() {
-		defer close(ack)
+		defer wg.Done()
 
 		for {
 			select {
 			case event := <-output.Events():
 				wg.Add(1)
-
 				go func(event Event) {
 					defer wg.Done()
 
@@ -40,15 +37,23 @@ func Repeat(initialValue interface{}, transformer Transformer) (Stream, CancelFu
 						return
 					case chEcho <- event:
 						if event.Error() == nil {
-							input.SendEvent(event)
+							select {
+							case <-done:
+							case chInput <- event:
+							}
 						}
 					}
 				}(event)
 			case <-done:
-				wg.Wait()
 				return
 			}
 		}
+	}()
+
+	go func() {
+		defer close(ack)
+		wg.Wait()
+		cancelInput()
 	}()
 
 	input.SendValue(initialValue)
