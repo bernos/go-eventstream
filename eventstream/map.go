@@ -21,7 +21,7 @@ func PMap(m Mapper, n int) Transformer {
 		var (
 			wg  sync.WaitGroup
 			ch  = make(chan Event)
-			out = in.FromChannel(ch)
+			out = in.CreateChild(ch)
 		)
 
 		wg.Add(n)

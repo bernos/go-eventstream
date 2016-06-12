@@ -1,14 +1,21 @@
 package eventstream
 
+// Stream represents a continuous source of events
 type Stream interface {
 	Events() <-chan Event
 	Send(interface{}, error)
 	Cancel()
-	FromChannel(chan Event) Stream
+	CreateChild(chan Event) Stream
 }
 
+// CancelFunc cancels a stream
+type CancelFunc func()
+
+// Base stream implementation
 type stream struct {
 	events chan Event
+	parent Stream
+	cancel CancelFunc
 }
 
 func (s *stream) Events() <-chan Event {
@@ -20,58 +27,107 @@ func (s *stream) Send(value interface{}, err error) {
 }
 
 func (s *stream) Cancel() {
-	close(s.events)
+	if s.parent != nil {
+		s.parent.Cancel()
+	} else if s.cancel != nil {
+		s.cancel()
+	} else {
+		close(s.events)
+	}
 }
 
-func (s *stream) FromChannel(in chan Event) Stream {
-	child := &childStream{
+// FromChannel creates a child stream. Calling Cancel() on the child
+// stream will walk the stream heirarchy and close the done channel
+// on the root stream
+func (s *stream) CreateChild(in chan Event) Stream {
+	return &stream{
 		parent: s,
-	}
-	child.stream.events = in
-
-	return child
-}
-
-type sourceStream struct {
-	stream
-	ack    chan struct{}
-	done   chan struct{}
-	isDone bool
-}
-
-func (s *sourceStream) Cancel() {
-	if !s.isDone {
-		s.isDone = true
-		close(s.done)
-		<-s.ack
+		events: in,
 	}
 }
 
+// NewStream creates a new stream
 func NewStream() Stream {
-	s := &sourceStream{
-		ack:    make(chan struct{}),
-		done:   make(chan struct{}),
-		isDone: false,
-	}
+	var (
+		isDone = false
+		ack    = make(chan struct{})
+		done   = make(chan struct{})
+	)
+
+	return newStream(make(chan Event), nil, func(s *stream) CancelFunc {
+		return func() {
+			if !isDone {
+				isDone = true
+
+				go func() {
+					defer func() {
+						close(ack)
+						close(s.events)
+					}()
+					<-done
+				}()
+
+				close(done)
+				<-ack
+			}
+		}
+	})
+}
+
+// Once creates a stream that will send a single value, then cancel automatically
+func Once(value interface{}) Stream {
+	s := NewStream()
 
 	go func() {
-		defer func() {
-			close(s.ack)
-			close(s.events)
-		}()
-		<-s.done
+		defer s.Cancel()
+		s.Send(value, nil)
 	}()
-
-	s.stream.events = make(chan Event)
 
 	return s
 }
 
-type childStream struct {
-	stream
-	parent Stream
+func FromSlice(xs []interface{}) Stream {
+	var (
+		isDone = false
+		ack    = make(chan struct{})
+		done   = make(chan struct{})
+	)
+
+	in := newStream(make(chan Event), nil, func(s *stream) CancelFunc {
+		return func() {
+			if !isDone {
+				isDone = true
+				close(done)
+				<-ack
+			}
+		}
+	})
+
+	go func() {
+		defer func() {
+			close(in.events)
+			close(ack)
+		}()
+
+		for i := range xs {
+			select {
+			case <-done:
+				return
+			case in.events <- NewEvent(xs[i], nil):
+			}
+		}
+	}()
+
+	return in
 }
 
-func (s *childStream) Cancel() {
-	s.parent.Cancel()
+func newStream(events chan Event, parent Stream, cancel func(*stream) CancelFunc) *stream {
+	s := &stream{
+		events: events,
+		parent: parent,
+	}
+
+	s.cancel = cancel(s)
+
+	return s
 }
