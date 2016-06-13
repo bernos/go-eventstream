@@ -54,7 +54,7 @@ func NewStream() Stream {
 		done   = make(chan struct{})
 	)
 
-	return newStream(make(chan Event), nil, func(s *stream) CancelFunc {
+	cancel := func(s *stream) CancelFunc {
 		return func() {
 			if !isDone {
 				isDone = true
@@ -71,7 +71,9 @@ func NewStream() Stream {
 				<-ack
 			}
 		}
-	})
+	}
+
+	return newStream(make(chan Event), nil, cancel)
 }
 
 // Once creates a stream that will send a single value, then cancel automatically
@@ -86,6 +88,7 @@ func Once(value interface{}) Stream {
 	return s
 }
 
+// FromSlice creates a stream that sends each item in xs and then cancels automatically
 func FromSlice(xs []interface{}) Stream {
 	var (
 		isDone = false
@@ -93,7 +96,7 @@ func FromSlice(xs []interface{}) Stream {
 		done   = make(chan struct{})
 	)
 
-	in := newStream(make(chan Event), nil, func(s *stream) CancelFunc {
+	cancel := func(s *stream) CancelFunc {
 		return func() {
 			if !isDone {
 				isDone = true
@@ -101,7 +104,9 @@ func FromSlice(xs []interface{}) Stream {
 				<-ack
 			}
 		}
-	})
+	}
+
+	in := newStream(make(chan Event), nil, cancel)
 
 	go func() {
 		defer func() {
