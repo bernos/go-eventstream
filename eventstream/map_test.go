@@ -3,6 +3,7 @@ package eventstream
 import (
 	"fmt"
 	"testing"
+	"time"
 )
 
 type IntMapper func(int) int
@@ -46,4 +47,44 @@ func TestMap(t *testing.T) {
 		}
 		count++
 	}
+}
+
+func TestMapError(t *testing.T) {
+	fn := MapperFunc(func(x interface{}) (interface{}, error) {
+		return 1, nil
+	})
+
+	s := NewStream()
+	m := Map(fn)
+
+	go func() {
+		defer s.Cancel()
+		s.Send(nil, fmt.Errorf("foo"))
+	}()
+
+	out := m.Transform(s)
+
+	select {
+	case e := <-out.Events():
+		if e.Error() == nil {
+			t.Errorf("Expected error, but got %v", e)
+		}
+	case <-time.After(time.Second):
+		t.Errorf("Timeout waiting for error from stream")
+	}
+}
+
+func TestMapperFunc(t *testing.T) {
+	fn := MapperFunc(func(x interface{}) (interface{}, error) {
+		return x.(int) + 10, nil
+	})
+
+	if y, err := fn.Map(1); err != nil {
+		t.Error(err)
+	} else {
+		if y.(int) != 11 {
+			t.Errorf("Want %d, got %d", 11, y.(int))
+		}
+	}
+
 }
