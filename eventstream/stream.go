@@ -88,6 +88,44 @@ func Once(value interface{}) Stream {
 	return s
 }
 
+// FromPoll creates a stream by calling fn for each value to send
+func FromPoll(fn func() (interface{}, error)) Stream {
+	var (
+		isDone = false
+		ack    = make(chan struct{})
+		done   = make(chan struct{})
+	)
+
+	cancel := func(s *stream) CancelFunc {
+		return func() {
+			if !isDone {
+				isDone = true
+				close(done)
+				<-ack
+			}
+		}
+	}
+
+	in := newStream(make(chan Event), nil, cancel)
+
+	go func() {
+		defer func() {
+			close(in.events)
+			close(ack)
+		}()
+
+		for {
+			select {
+			case in.events <- NewEvent(fn()):
+			case <-done:
+				return
+			}
+		}
+	}()
+
+	return in
+}
+
 // FromSlice creates a stream that sends each item in xs and then cancels automatically
 func FromSlice(xs []interface{}) Stream {
 	var (

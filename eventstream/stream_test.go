@@ -21,6 +21,38 @@ func TestOnce(t *testing.T) {
 
 }
 
+func TestFromPoll(t *testing.T) {
+	x := 0
+
+	poll := func() (interface{}, error) {
+		y := x
+		x++
+		return y, nil
+	}
+
+	s := FromPoll(poll)
+
+	max := 3
+	count := 0
+
+	for e := range s.Events() {
+
+		if e.Value().(int) != count {
+			t.Errorf("Want %d, got %d", count, e.Value().(int))
+		}
+
+		count++
+
+		if count == max {
+			s.Cancel()
+		}
+	}
+
+	if count != max {
+		t.Errorf("Want 5 values, got %d", count)
+	}
+}
+
 func TestFromSlice(t *testing.T) {
 	s := FromSlice([]interface{}{1, 2, 3, 4, 5})
 
@@ -101,5 +133,11 @@ func TestDefaultCancel(t *testing.T) {
 	case <-time.After(time.Second):
 		t.Error("Timed out waiting for stream to close")
 	}
+}
 
+func TestMultipleCancel(t *testing.T) {
+	s := NewStream()
+
+	s.Cancel()
+	s.Cancel()
 }
