@@ -1,12 +1,14 @@
 package eventstream
 
+type Accumulator interface{}
+
 type Reducer interface {
-	Reduce(acc interface{}, value interface{}) (interface{}, error)
+	Reduce(Accumulator, interface{}) (Accumulator, error)
 }
 
-type ReducerFunc func(acc interface{}, value interface{}) (interface{}, error)
+type ReducerFunc func(Accumulator, interface{}) (Accumulator, error)
 
-func (fn ReducerFunc) Reduce(acc interface{}, value interface{}) (interface{}, error) {
+func (fn ReducerFunc) Reduce(acc Accumulator, value interface{}) (Accumulator, error) {
 	return fn(acc, value)
 }
 

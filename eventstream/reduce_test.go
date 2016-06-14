@@ -13,7 +13,7 @@ func TestReduce(t *testing.T) {
 		expect   = 15
 	)
 
-	fn := ReducerFunc(func(acc, value interface{}) (interface{}, error) {
+	fn := ReducerFunc(func(acc Accumulator, value interface{}) (Accumulator, error) {
 		return acc.(int) + value.(int), nil
 	})
 
