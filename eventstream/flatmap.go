@@ -1,4 +1,4 @@
-package stream
+package eventstream
 
 import "sync"
 
@@ -8,8 +8,8 @@ type FlatMapper interface {
 
 type FlatMapperFunc func(interface{}) ([]interface{}, error)
 
-func (fn FlatMapperFunc) FlatMap(value interface{}) ([]interface{}, error) {
-	return fn(value)
+func (fn FlatMapperFunc) FlatMap(x interface{}) ([]interface{}, error) {
+	return fn(x)
 }
 
 func FlatMap(m FlatMapper) Transformer {
@@ -17,10 +17,11 @@ func FlatMap(m FlatMapper) Transformer {
 }
 
 func PFlatMap(m FlatMapper, n int) Transformer {
-	return TransformFunc(func(in Stream) Stream {
+	return TransformerFunc(func(in Stream) Stream {
 		var (
-			wg       sync.WaitGroup
-			out, cls = NewStream()
+			wg  sync.WaitGroup
+			ch  = make(chan Event)
+			out = in.CreateChild(ch)
 		)
 
 		wg.Add(n)
@@ -31,16 +32,14 @@ func PFlatMap(m FlatMapper, n int) Transformer {
 
 				for event := range in.Events() {
 					if event.Error() != nil {
-						out.SendEvent(event)
+						out.Send(nil, event.Error())
 					} else {
-						values, err := m.FlatMap(event.Value())
-
-						if err == nil {
-							for v := range values {
-								out.SendValue(values[v])
+						if xs, err := m.FlatMap(event.Value()); err == nil {
+							for x := range xs {
+								out.Send(xs[x], nil)
 							}
 						} else {
-							out.SendError(err)
+							out.Send(nil, err)
 						}
 					}
 				}
@@ -48,7 +47,7 @@ func PFlatMap(m FlatMapper, n int) Transformer {
 		}
 
 		go func() {
-			defer cls()
+			defer close(ch)
 			wg.Wait()
 		}()
 

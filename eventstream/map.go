@@ -1,4 +1,4 @@
-package stream
+package eventstream
 
 import "sync"
 
@@ -6,10 +6,8 @@ type Mapper interface {
 	Map(value interface{}) (interface{}, error)
 }
 
-// MapperFunc is a func that implements Mapper
 type MapperFunc func(interface{}) (interface{}, error)
 
-// Map satisfies the Mapper interface
 func (fn MapperFunc) Map(x interface{}) (interface{}, error) {
 	return fn(x)
 }
@@ -18,14 +16,12 @@ func Map(m Mapper) Transformer {
 	return PMap(m, 1)
 }
 
-// PMap is a parallel implementation of Map. It produces a Pipeline that maps
-// all values from its input stream to its output stream via n concurrent instances
-// of the Mapper m
 func PMap(m Mapper, n int) Transformer {
-	return TransformFunc(func(in Stream) Stream {
+	return TransformerFunc(func(in Stream) Stream {
 		var (
-			wg       sync.WaitGroup
-			out, cls = NewStream()
+			wg  sync.WaitGroup
+			ch  = make(chan Event)
+			out = in.CreateChild(ch)
 		)
 
 		wg.Add(n)
@@ -36,16 +32,16 @@ func PMap(m Mapper, n int) Transformer {
 
 				for event := range in.Events() {
 					if event.Error() != nil {
-						out.SendEvent(event)
+						out.Send(nil, event.Error())
 					} else {
-						out.SendEvent(NewEvent(m.Map(event.Value())))
+						out.Send(m.Map(event.Value()))
 					}
 				}
 			}()
 		}
 
 		go func() {
-			defer cls()
+			defer close(ch)
 			wg.Wait()
 		}()
 
