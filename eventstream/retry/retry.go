@@ -8,6 +8,8 @@ import (
 
 const (
 	DefaultMaxRetries = 10
+	DefaultBaseDelay  = time.Millisecond
+	DefaultMaxDelay   = time.Minute
 	Infinity          = -1
 )
 
@@ -50,8 +52,8 @@ func While(fn func(error) bool) func(*Retrier) {
 
 func Retry(fn func() (interface{}, error), options ...func(*Retrier)) func() (interface{}, error) {
 	r := Retrier{
-		BaseDelay:   time.Millisecond,
-		MaxDelay:    time.Minute,
+		BaseDelay:   DefaultBaseDelay,
+		MaxDelay:    DefaultMaxDelay,
 		MaxRetries:  DefaultMaxRetries,
 		ShouldRetry: func(err error) bool { return true },
 	}
