@@ -1,5 +1,7 @@
 package eventstream
 
+import "github.com/bernos/go-frp/eventstream/retry"
+
 // Stream represents a continuous source of events
 type Stream interface {
 	Events() <-chan Event
@@ -107,6 +109,44 @@ func FromPoll(fn func() (interface{}, error)) Stream {
 	}
 
 	in := newStream(make(chan Event), nil, cancel)
+
+	go func() {
+		defer func() {
+			close(in.events)
+			close(ack)
+		}()
+
+		for {
+			select {
+			case in.events <- NewEvent(fn()):
+			case <-done:
+				return
+			}
+		}
+	}()
+
+	return in
+}
+
+func FromPollWithRetries(fn func() (interface{}, error), options ...func(*retry.Retrier)) Stream {
+	var (
+		isDone = false
+		ack    = make(chan struct{})
+		done   = make(chan struct{})
+	)
+
+	cancel := func(s *stream) CancelFunc {
+		return func() {
+			if !isDone {
+				isDone = true
+				close(done)
+				<-ack
+			}
+		}
+	}
+
+	in := newStream(make(chan Event), nil, cancel)
+	fn = retry.Retry(fn, options...)
 
 	go func() {
 		defer func() {
