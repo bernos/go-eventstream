@@ -8,6 +8,18 @@ type Stream interface {
 	Send(interface{}, error)
 	Cancel()
 	CreateChild(chan Event) Stream
+
+	Filter(Predicate) Stream
+	FlatMap(FlatMapper) Stream
+	PFlatMap(FlatMapper, int) Stream
+	Last() Stream
+	Map(Mapper) Stream
+	PMap(Mapper, int) Stream
+	Reduce(Reducer) Stream
+	Scan(Reducer) Stream
+	Take(int) Stream
+	TakeUntil(Predicate) Stream
+	TakeWhile(Predicate) Stream
 }
 
 // CancelFunc cancels a stream
@@ -18,6 +30,50 @@ type stream struct {
 	events chan Event
 	parent Stream
 	cancel CancelFunc
+}
+
+func (s *stream) Filter(fn Predicate) Stream {
+	return Filter(fn).Transform(s)
+}
+
+func (s *stream) FlatMap(m FlatMapper) Stream {
+	return FlatMap(m).Transform(s)
+}
+
+func (s *stream) PFlatMap(m FlatMapper, n int) Stream {
+	return PFlatMap(m, n).Transform(s)
+}
+
+func (s *stream) Last() Stream {
+	return Last().Transform(s)
+}
+
+func (s *stream) Map(fn Mapper) Stream {
+	return Map(fn).Transform(s)
+}
+
+func (s *stream) PMap(m Mapper, n int) Stream {
+	return PMap(m, n).Transform(s)
+}
+
+func (s *stream) Reduce(r Reducer) Stream {
+	return Reduce(r).Transform(s)
+}
+
+func (s *stream) Scan(r Reducer) Stream {
+	return Scan(r).Transform(s)
+}
+
+func (s *stream) Take(n int) Stream {
+	return Take(n).Transform(s)
+}
+
+func (s *stream) TakeUntil(fn Predicate) Stream {
+	return TakeUntil(fn).Transform(s)
+}
+
+func (s *stream) TakeWhile(fn Predicate) Stream {
+	return TakeWhile(fn).Transform(s)
 }
 
 func (s *stream) Events() <-chan Event {
