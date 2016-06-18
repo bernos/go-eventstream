@@ -18,7 +18,7 @@ type Retrier struct {
 	BaseDelay      time.Duration
 	MaxDelay       time.Duration
 	ShouldRetry    func(error) bool
-	CalculateDelay func(uint, time.Duration, time.Duration) time.Duration
+	CalculateDelay BackoffFunc
 	Log            func(string, ...interface{})
 }
 
