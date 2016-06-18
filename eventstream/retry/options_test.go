@@ -3,7 +3,72 @@ package retry
 import (
 	"fmt"
 	"testing"
+	"time"
 )
+
+func TestBaseDelay(t *testing.T) {
+	r := &Retrier{}
+
+	BaseDelay(time.Second)(r)
+
+	if r.BaseDelay != time.Second {
+		t.Errorf("Want %s, got %s", time.Second, r.BaseDelay)
+	}
+}
+
+func TestForever(t *testing.T) {
+	r := &Retrier{}
+
+	Forever()(r)
+
+	if r.MaxRetries != Infinity {
+		t.Errorf("Want %d, got %d", Infinity, r.MaxRetries)
+	}
+}
+
+func TestMaxDelay(t *testing.T) {
+	r := &Retrier{}
+
+	MaxDelay(time.Hour)(r)
+
+	if r.MaxDelay != time.Hour {
+		t.Errorf("Want %s, got %s", time.Hour, r.MaxDelay)
+	}
+}
+
+func TestExponentialBackoff(t *testing.T) {
+	r := &Retrier{}
+
+	ExponentialBackoff()(r)
+
+	if r.CalculateDelay(5, time.Millisecond, time.Minute) != calculateDelayBinary(5, time.Millisecond, time.Minute) {
+		t.Errorf("Want calculateDelayBinary")
+	}
+}
+
+func TestWhile(t *testing.T) {
+	count := 0
+	max := 3
+
+	fn := func() (interface{}, error) {
+		count++
+		return nil, fmt.Errorf("Test retry")
+	}
+
+	r := Retry(fn, While(func(error) bool {
+		return count < max
+	}))
+
+	_, err := r()
+
+	if err == nil {
+		t.Errorf("Expected an error")
+	}
+
+	if count != max {
+		t.Errorf("Want %d, got %d", max, count)
+	}
+}
 
 func TestLog(t *testing.T) {
 	count := 0
