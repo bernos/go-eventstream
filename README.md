@@ -21,7 +21,7 @@ The Stream interface represents a continuous stream of `Event`s. Event streams a
 
 ```go
 type Stream interface {
-  // Retrieve the underlying Event channel from the stream
+  	// Retrieve the underlying Event channel from the stream
 	Events() <-chan Event
 	
 	// Send a value and/or error on the stream
@@ -38,8 +38,16 @@ type Stream interface {
 	// ancestor Stream.
 	CreateChild(chan Event) Stream
 
-  // ...
+  	// ...
 }
+```
 
+The `Transformer` interface represents the ability to transform one `Stream` to another. `Transformer` can be used to implement concepts such as filtering, mapping, folding and throttling. `Transformer` can also compose with itself, making it easy to build powerful concurrent pipelines with ease. The go-eventstream package ships with implementations of many common Stream Transformers, such as `Map`, `PMap`, `FlatMap`, `PFlatMap`, `Scan`, `Reduce` and more.
+
+```go
+type Transformer interface {
+	Transform(Stream) Stream
+	Compose(Transformer) Transformer
+}
 ```
 
