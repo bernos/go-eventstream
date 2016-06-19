@@ -220,6 +220,10 @@ func FromSlice(xs []interface{}) Stream {
 	return in
 }
 
+func FromValues(xs ...interface{}) Stream {
+	return FromSlice(xs)
+}
+
 func newStream(events chan Event, parent Stream, cancel func(*stream) CancelFunc) *stream {
 	s := &stream{
 		events: events,
