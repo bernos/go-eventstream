@@ -1,122 +1,122 @@
 package main
 
-import (
-	"io/ioutil"
-	"log"
-	"net/http"
-	"regexp"
+// import (
+// 	"io/ioutil"
+// 	"log"
+// 	"net/http"
+// 	"regexp"
 
-	"fmt"
+// 	"fmt"
 
-	"github.com/bernos/go-frp/stream"
-)
+// 	"github.com/bernos/go-frp/stream"
+// )
 
-var (
-	urlRegexp = regexp.MustCompile(`https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)`)
-)
+// var (
+// 	urlRegexp = regexp.MustCompile(`https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)`)
+// )
 
-type Job struct {
-	URL  string
-	Body string
-}
+// type Job struct {
+// 	URL  string
+// 	Body string
+// }
 
-type JobMapper func(j Job) (Job, error)
+// type JobMapper func(j Job) (Job, error)
 
-func (m JobMapper) Map(e interface{}) (interface{}, error) {
-	if job, ok := e.(Job); ok {
-		return m(job)
-	}
+// func (m JobMapper) Map(e interface{}) (interface{}, error) {
+// 	if job, ok := e.(Job); ok {
+// 		return m(job)
+// 	}
 
-	return nil, fmt.Errorf("Expected Job from stream")
-}
+// 	return nil, fmt.Errorf("Expected Job from stream")
+// }
 
-type JobFlatMapper func(j Job) ([]Job, error)
+// type JobFlatMapper func(j Job) ([]Job, error)
 
-func (m JobFlatMapper) FlatMap(v interface{}) ([]interface{}, error) {
-	if job, ok := v.(Job); ok {
-		jobs, err := m(job)
+// func (m JobFlatMapper) FlatMap(v interface{}) ([]interface{}, error) {
+// 	if job, ok := v.(Job); ok {
+// 		jobs, err := m(job)
 
-		if err != nil {
-			return nil, err
-		}
+// 		if err != nil {
+// 			return nil, err
+// 		}
 
-		values := make([]interface{}, len(jobs))
+// 		values := make([]interface{}, len(jobs))
 
-		for i := range jobs {
-			values[i] = jobs[i]
-		}
+// 		for i := range jobs {
+// 			values[i] = jobs[i]
+// 		}
 
-		return values, nil
-	} else {
-		return nil, fmt.Errorf("Expected job from stream")
-	}
-}
+// 		return values, nil
+// 	} else {
+// 		return nil, fmt.Errorf("Expected job from stream")
+// 	}
+// }
 
-func main() {
-	count := 0
-	max := 10
+// func main() {
+// 	count := 0
+// 	max := 10
 
-	out, cancel := stream.
-		Map(fetchURL(&http.Client{})).
-		FlatMap(findURLS()).
-		Repeat(Job{URL: "http://www.wikipedia.com"})
+// 	out, cancel := stream.
+// 		Map(fetchURL(&http.Client{})).
+// 		FlatMap(findURLS()).
+// 		Repeat(Job{URL: "http://www.wikipedia.com"})
 
-	for e := range out.Events() {
-		if e.Error() != nil {
-			log.Printf("ERROR: %s", e.Error().Error())
-			cancel()
-		} else {
-			log.Printf("Received %v", e.Value())
+// 	for e := range out.Events() {
+// 		if e.Error() != nil {
+// 			log.Printf("ERROR: %s", e.Error().Error())
+// 			cancel()
+// 		} else {
+// 			log.Printf("Received %v", e.Value())
 
-			count++
-			if count > max {
-				cancel()
-			}
-		}
-	}
-}
+// 			count++
+// 			if count > max {
+// 				cancel()
+// 			}
+// 		}
+// 	}
+// }
 
-// fetchURL returns a pipeline Mapper that fetches the content for a URL and
-// adds it to the job in the context
-func fetchURL(client *http.Client) stream.Mapper {
-	return JobMapper(func(j Job) (Job, error) {
-		log.Printf("fetching %s\n", j.URL)
+// // fetchURL returns a pipeline Mapper that fetches the content for a URL and
+// // adds it to the job in the context
+// func fetchURL(client *http.Client) stream.Mapper {
+// 	return JobMapper(func(j Job) (Job, error) {
+// 		log.Printf("fetching %s\n", j.URL)
 
-		resp, err := client.Get(j.URL)
+// 		resp, err := client.Get(j.URL)
 
-		if err != nil {
-			return j, err
-		}
+// 		if err != nil {
+// 			return j, err
+// 		}
 
-		defer resp.Body.Close()
-		body, err := ioutil.ReadAll(resp.Body)
+// 		defer resp.Body.Close()
+// 		body, err := ioutil.ReadAll(resp.Body)
 
-		if err != nil {
-			return j, err
-		}
+// 		if err != nil {
+// 			return j, err
+// 		}
 
-		j.Body = string(body)
+// 		j.Body = string(body)
 
-		return j, nil
-	})
-}
+// 		return j, nil
+// 	})
+// }
 
-func findURLS() stream.FlatMapper {
-	return JobFlatMapper(func(j Job) ([]Job, error) {
-		result := urlRegexp.FindAllString(j.Body, -1)
-		jobs := make([]Job, len(result))
-		log.Printf("Found %d urls", len(result))
-		// log.Printf("%v\n", result)
+// func findURLS() stream.FlatMapper {
+// 	return JobFlatMapper(func(j Job) ([]Job, error) {
+// 		result := urlRegexp.FindAllString(j.Body, -1)
+// 		jobs := make([]Job, len(result))
+// 		log.Printf("Found %d urls", len(result))
+// 		// log.Printf("%v\n", result)
 
-		if result != nil {
-			for i, url := range result {
-				jobs[i] = Job{URL: url}
-			}
-		}
+// 		if result != nil {
+// 			for i, url := range result {
+// 				jobs[i] = Job{URL: url}
+// 			}
+// 		}
 
-		return jobs, nil
-	})
-}
+// 		return jobs, nil
+// 	})
+// }
 
 // func main() {
 

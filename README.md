@@ -1,5 +1,7 @@
 # go-eventstream
 
+[![Build Status](https://travis-ci.org/bernos/go-eventstream.svg?branch=master)](https://travis-ci.org/bernos/go-eventstream)&nbsp;[![GoDoc](https://godoc.org/github.com/bernos/go-eventstream?status.svg)](https://godoc.org/github.com/bernos/go-eventstream)
+
 A package for creating composable concurrent event streams. 
 
 The go programming language features primitives such as channels and go routines for writing concurrent programs. While these primitives can be used to implement powerful concurrency patterns, doing so over and over again can be tedious and error-prone.
