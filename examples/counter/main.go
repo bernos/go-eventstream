@@ -7,6 +7,14 @@ import (
 	"github.com/bernos/go-eventstream/eventstream"
 )
 
+var (
+	directions   = []string{"up", "down"}
+	directionMap = map[string]int{
+		"up":   1,
+		"down": -1,
+	}
+)
+
 func main() {
 	out := eventstream.
 		FromPoll(randomDirection).
@@ -23,21 +31,12 @@ func main() {
 }
 
 func randomDirection() (interface{}, error) {
-	directions := []string{"up", "down"}
 	return directions[rand.Intn(len(directions))], nil
 }
 
 func toInt() eventstream.Mapper {
 	return eventstream.MapperFunc(func(x interface{}) (interface{}, error) {
-		if x.(string) == "up" {
-			return 1, nil
-		}
-
-		if x.(string) == "down" {
-			return -1, nil
-		}
-
-		return 0, nil
+		return directionMap[x.(string)], nil
 	})
 }
 
