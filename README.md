@@ -48,6 +48,8 @@ The `Transformer` interface represents the ability to transform one `Stream` to 
 type Transformer interface {
 	Transform(Stream) Stream
 	Compose(Transformer) Transformer
+	
+	// ...
 }
 ```
 
