@@ -1,5 +1,7 @@
 package eventstream
 
+import "time"
+
 // Stream represents a continuous source of events
 type Stream interface {
 	Events() <-chan Event
@@ -20,6 +22,7 @@ type Stream interface {
 	Take(int) Stream
 	TakeUntil(Predicate) Stream
 	TakeWhile(Predicate) Stream
+	Throttle(time.Duration) Stream
 }
 
 // CancelFunc cancels a stream
@@ -89,6 +92,10 @@ func (s *stream) Events() <-chan Event {
 
 func (s *stream) Send(value interface{}, err error) {
 	s.events <- NewEvent(value, err)
+}
+
+func (s *stream) Throttle(d time.Duration) Stream {
+	return Throttle(d).Transform(s)
 }
 
 func (s *stream) Cancel() {

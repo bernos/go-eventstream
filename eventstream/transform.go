@@ -1,5 +1,7 @@
 package eventstream
 
+import "time"
+
 type Transformer interface {
 	Transform(Stream) Stream
 	Compose(Transformer) Transformer
@@ -16,6 +18,7 @@ type Transformer interface {
 	Take(int) Transformer
 	TakeWhile(Predicate) Transformer
 	TakeUntil(Predicate) Transformer
+	Throttle(time.Duration) Transformer
 }
 
 type TransformerFunc func(Stream) Stream
@@ -74,6 +77,10 @@ func (t TransformerFunc) TakeUntil(fn Predicate) Transformer {
 
 func (t TransformerFunc) TakeWhile(fn Predicate) Transformer {
 	return t.Compose(TakeWhile(fn))
+}
+
+func (t TransformerFunc) Throttle(d time.Duration) Transformer {
+	return t.Compose(Throttle(d))
 }
 
 func (t TransformerFunc) Compose(next Transformer) Transformer {
