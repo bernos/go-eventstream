@@ -33,12 +33,6 @@ func randomTimer(message string) func() (interface{}, error) {
 	}
 }
 
-func toConstInt(i int) eventstream.Mapper {
-	return eventstream.MapperFunc(func(x interface{}) (interface{}, error) {
-		return i, nil
-	})
-}
-
 func sum() eventstream.Reducer {
 	return eventstream.ReducerFunc(func(acc eventstream.Accumulator, x interface{}) (eventstream.Accumulator, error) {
 		return acc.(int) + x.(int), nil
