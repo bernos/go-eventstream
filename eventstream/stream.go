@@ -11,6 +11,7 @@ type Stream interface {
 	Filter(Predicate) Stream
 	FlatMap(FlatMapper) Stream
 	PFlatMap(FlatMapper, int) Stream
+	Id() Stream
 	Last() Stream
 	Map(Mapper) Stream
 	PMap(Mapper, int) Stream
@@ -44,6 +45,10 @@ func (s *stream) FlatMap(m FlatMapper) Stream {
 
 func (s *stream) PFlatMap(m FlatMapper, n int) Stream {
 	return PFlatMap(m, n).Transform(s)
+}
+
+func (s *stream) Id() Stream {
+	return Id().Transform(s)
 }
 
 func (s *stream) Last() Stream {
@@ -87,10 +92,10 @@ func (s *stream) Send(value interface{}, err error) {
 }
 
 func (s *stream) Cancel() {
-	if s.parent != nil {
-		s.parent.Cancel()
-	} else if s.cancel != nil {
+	if s.cancel != nil {
 		s.cancel()
+	} else if s.parent != nil {
+		s.parent.Cancel()
 	} else {
 		close(s.events)
 	}

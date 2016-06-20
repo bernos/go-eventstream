@@ -7,6 +7,7 @@ type Transformer interface {
 	Filter(Predicate) Transformer
 	FlatMap(FlatMapper) Transformer
 	PFlatMap(FlatMapper, int) Transformer
+	Id() Transformer
 	Last() Transformer
 	Map(Mapper) Transformer
 	PMap(Mapper, int) Transformer
@@ -33,6 +34,10 @@ func (t TransformerFunc) Filter(fn Predicate) Transformer {
 
 func (t TransformerFunc) FlatMap(m FlatMapper) Transformer {
 	return t.Compose(FlatMap(m))
+}
+
+func (t TransformerFunc) Id() Transformer {
+	return t.Compose(Id())
 }
 
 func (t TransformerFunc) Last() Transformer {
