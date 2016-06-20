@@ -3,6 +3,7 @@ package eventstream
 type Transformer interface {
 	Transform(Stream) Stream
 	Compose(Transformer) Transformer
+	Const(interface{}) Transformer
 	Filter(Predicate) Transformer
 	FlatMap(FlatMapper) Transformer
 	PFlatMap(FlatMapper, int) Transformer
@@ -20,6 +21,10 @@ type TransformerFunc func(Stream) Stream
 
 func (t TransformerFunc) Transform(s Stream) Stream {
 	return t(s)
+}
+
+func (t TransformerFunc) Const(x interface{}) Transformer {
+	return t.Compose(Const(x))
 }
 
 func (t TransformerFunc) Filter(fn Predicate) Transformer {

@@ -7,6 +7,7 @@ type Stream interface {
 	Cancel()
 	CreateChild(chan Event) Stream
 
+	Const(interface{}) Stream
 	Filter(Predicate) Stream
 	FlatMap(FlatMapper) Stream
 	PFlatMap(FlatMapper, int) Stream
@@ -30,6 +31,9 @@ type stream struct {
 	cancel CancelFunc
 }
 
+func (s *stream) Const(x interface{}) Stream {
+	return Const(x).Transform(s)
+}
 func (s *stream) Filter(fn Predicate) Stream {
 	return Filter(fn).Transform(s)
 }
