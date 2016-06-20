@@ -36,11 +36,13 @@ func TakeWhile(fn Predicate) Transformer {
 
 		go func() {
 			defer close(ch)
+			done := false
 
 			for e := range in.Events() {
-				if fn(e) {
+				if !done && fn(e) {
 					out.Send(e.Value(), e.Error())
-				} else {
+				} else if !done {
+					done = true
 					in.Cancel()
 				}
 			}
@@ -60,11 +62,13 @@ func TakeUntil(fn Predicate) Transformer {
 
 		go func() {
 			defer close(ch)
+			done := false
 
 			for e := range in.Events() {
-				if fn(e) {
+				if !done && fn(e) {
+					done = true
 					in.Cancel()
-				} else {
+				} else if !done {
 					out.Send(e.Value(), e.Error())
 				}
 			}

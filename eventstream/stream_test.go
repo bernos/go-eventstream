@@ -149,26 +149,14 @@ func TestCancelSync(t *testing.T) {
 		}
 
 		max := 0
-		done := false
-		out := FromSlice(values)
 		want := int(len(values) / 2)
+
+		out := FromSlice(values).Id().Id().TakeUntil(func(e Event) bool {
+			return e.Value().(int) > want
+		})
 
 		for event := range out.Events() {
 			max = event.Value().(int)
-
-			if done {
-				// log.Printf("aasdfsadaf")
-			}
-
-			if max == want {
-				// log.Printf("Done. %d", max)
-				done = true
-				out.Cancel()
-			}
-		}
-
-		if max != want {
-			// t.Errorf("Want %d, got %d", want, max)
 		}
 
 		return max == want

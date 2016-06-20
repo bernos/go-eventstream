@@ -19,6 +19,15 @@ func main() {
 	out := eventstream.
 		FromPoll(randomDirection).
 		Map(toInt()).
+		Id().
+		Id().
+		Id().
+		Id().
+		Id().
+		Id().
+		Id().
+		Id().
+		Id().
 		Scan(sum())
 
 	for event := range out.Events() {
