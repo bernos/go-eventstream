@@ -1,7 +1,11 @@
 package eventstream
 
-import "testing"
-import "time"
+import (
+	"math/rand"
+	"testing"
+	"testing/quick"
+	"time"
+)
 
 func TestOnce(t *testing.T) {
 	s := Once("hello")
@@ -132,6 +136,46 @@ func TestDefaultCancel(t *testing.T) {
 	case <-s.Events():
 	case <-time.After(time.Second):
 		t.Error("Timed out waiting for stream to close")
+	}
+}
+
+func TestCancelSync(t *testing.T) {
+	f := func(x int64) bool {
+		r := rand.New(rand.NewSource(x))
+		values := make([]interface{}, r.Intn(10000))
+
+		for i := 0; i < len(values); i++ {
+			values[i] = i
+		}
+
+		max := 0
+		done := false
+		out := FromSlice(values)
+		want := int(len(values) / 2)
+
+		for event := range out.Events() {
+			max = event.Value().(int)
+
+			if done {
+				// log.Printf("aasdfsadaf")
+			}
+
+			if max == want {
+				// log.Printf("Done. %d", max)
+				done = true
+				out.Cancel()
+			}
+		}
+
+		if max != want {
+			// t.Errorf("Want %d, got %d", want, max)
+		}
+
+		return max == want
+	}
+
+	if err := quick.Check(f, nil); err != nil {
+		t.Error(err)
 	}
 }
 
