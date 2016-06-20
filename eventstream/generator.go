@@ -1,6 +1,16 @@
 package eventstream
 
-func FromGenerator(fn func(chan Event, chan struct{}) error) Stream {
+type Generator interface {
+	Generate(chan Event, chan struct{}) error
+}
+
+type GeneratorFunc func(chan Event, chan struct{}) error
+
+func (fn GeneratorFunc) Generate(out chan Event, done chan struct{}) error {
+	return fn(out, done)
+}
+
+func FromGenerator(g Generator) Stream {
 	var (
 		isDone = false
 		ack    = make(chan struct{})
@@ -25,7 +35,7 @@ func FromGenerator(fn func(chan Event, chan struct{}) error) Stream {
 			close(ack)
 		}()
 
-		err := fn(in.events, done)
+		err := g.Generate(in.events, done)
 
 		if err != nil {
 			in.Send(nil, err)
@@ -36,7 +46,7 @@ func FromGenerator(fn func(chan Event, chan struct{}) error) Stream {
 }
 
 func FromPoll(fn func() (interface{}, error)) Stream {
-	return FromGenerator(func(out chan Event, done chan struct{}) error {
+	return FromGenerator(GeneratorFunc(func(out chan Event, done chan struct{}) error {
 		for {
 			select {
 			case out <- NewEvent(fn()):
@@ -44,11 +54,11 @@ func FromPoll(fn func() (interface{}, error)) Stream {
 				return nil
 			}
 		}
-	})
+	}))
 }
 
 func FromSlice(xs []interface{}) Stream {
-	return FromGenerator(func(out chan Event, done chan struct{}) error {
+	return FromGenerator(GeneratorFunc(func(out chan Event, done chan struct{}) error {
 		for i := range xs {
 			select {
 			case <-done:
@@ -57,17 +67,17 @@ func FromSlice(xs []interface{}) Stream {
 			}
 		}
 		return nil
-	})
+	}))
 }
 
 func Once(value interface{}) Stream {
-	return FromGenerator(func(out chan Event, done chan struct{}) error {
+	return FromGenerator(GeneratorFunc(func(out chan Event, done chan struct{}) error {
 		select {
 		case <-done:
 		case out <- NewEvent(value, nil):
 		}
 		return nil
-	})
+	}))
 }
 
 func FromValues(xs ...interface{}) Stream {
