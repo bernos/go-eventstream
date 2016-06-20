@@ -13,11 +13,16 @@ func Take(n int) Transformer {
 			defer close(ch)
 
 			count := 0
+			done := false
 
 			for e := range in.Events() {
-				out.Send(e.Value(), e.Error())
-				count++
-				if count == n {
+				if !done {
+					out.Send(e.Value(), e.Error())
+					count++
+				}
+
+				if !done && count == n {
+					done = true
 					in.Cancel()
 				}
 			}
