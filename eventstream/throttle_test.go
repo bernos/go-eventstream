@@ -21,7 +21,7 @@ func TestThrottle(t *testing.T) {
 
 	diff := time.Since(start) - expect
 
-	if diff > (time.Millisecond * 5) {
-		t.Errorf("want %s, got %s", expect, diff)
+	if diff > (time.Millisecond * 10) {
+		t.Errorf("want %s, got %s", expect, diff+expect)
 	}
 }
