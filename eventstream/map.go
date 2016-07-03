@@ -1,6 +1,10 @@
 package eventstream
 
-import "sync"
+import (
+	"sync"
+
+	"github.com/bernos/go-eventstream/eventstream/event"
+)
 
 type Mapper interface {
 	Map(value interface{}) (interface{}, error)
@@ -20,7 +24,7 @@ func PMap(m Mapper, n int) Transformer {
 	return TransformerFunc(func(in Stream) Stream {
 		var (
 			wg  sync.WaitGroup
-			ch  = make(chan Event)
+			ch  = make(chan event.Event)
 			out = in.CreateChild(ch)
 		)
 

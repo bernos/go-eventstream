@@ -3,6 +3,8 @@ package eventstream
 import (
 	"testing"
 	"time"
+
+	"github.com/bernos/go-eventstream/eventstream/event"
 )
 
 func TestOnce(t *testing.T) {
@@ -98,7 +100,7 @@ func TestFromSliceCancel(t *testing.T) {
 
 func TestCancelChild(t *testing.T) {
 	var (
-		ch     = make(chan (Event))
+		ch     = make(chan (event.Event))
 		parent = NewStream()
 		child  = parent.CreateChild(ch)
 	)
@@ -123,7 +125,7 @@ func TestCancelChild(t *testing.T) {
 
 func TestDefaultCancel(t *testing.T) {
 	s := &stream{
-		events: make(chan Event),
+		events: make(chan event.Event),
 	}
 
 	go func() {

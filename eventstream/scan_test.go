@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"reflect"
 	"testing"
+
+	"github.com/bernos/go-eventstream/eventstream/event"
 )
 
 func TestScan(t *testing.T) {
@@ -51,7 +53,7 @@ func TestScanInputError(t *testing.T) {
 	}
 }
 
-var result Event
+var result event.Event
 
 func BenchmarkScan(b *testing.B) {
 	var (

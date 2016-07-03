@@ -1,6 +1,7 @@
 package eventstream
 
 import "sync"
+import "github.com/bernos/go-eventstream/eventstream/event"
 
 type FlatMapper interface {
 	FlatMap(interface{}) ([]interface{}, error)
@@ -20,7 +21,7 @@ func PFlatMap(m FlatMapper, n int) Transformer {
 	return TransformerFunc(func(in Stream) Stream {
 		var (
 			wg  sync.WaitGroup
-			ch  = make(chan Event)
+			ch  = make(chan event.Event)
 			out = in.CreateChild(ch)
 		)
 

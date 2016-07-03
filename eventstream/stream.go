@@ -2,12 +2,14 @@ package eventstream
 
 import "time"
 
+import "github.com/bernos/go-eventstream/eventstream/event"
+
 // Stream represents a continuous source of events
 type Stream interface {
-	Events() <-chan Event
+	Events() <-chan event.Event
 	Send(interface{}, error)
 	Cancel()
-	CreateChild(chan Event) Stream
+	CreateChild(chan event.Event) Stream
 
 	Const(interface{}) Stream
 	Filter(Predicate) Stream
@@ -30,7 +32,7 @@ type CancelFunc func()
 
 // Base stream implementation
 type stream struct {
-	events chan Event
+	events chan event.Event
 	parent Stream
 	cancel CancelFunc
 }
@@ -86,12 +88,12 @@ func (s *stream) TakeWhile(fn Predicate) Stream {
 	return TakeWhile(fn).Transform(s)
 }
 
-func (s *stream) Events() <-chan Event {
+func (s *stream) Events() <-chan event.Event {
 	return s.events
 }
 
 func (s *stream) Send(value interface{}, err error) {
-	s.events <- NewEvent(value, err)
+	s.events <- event.New(value, err)
 }
 
 func (s *stream) Throttle(d time.Duration) Stream {
@@ -111,7 +113,7 @@ func (s *stream) Cancel() {
 // FromChannel creates a child stream. Calling Cancel() on the child
 // stream will walk the stream heirarchy and close the done channel
 // on the root stream
-func (s *stream) CreateChild(in chan Event) Stream {
+func (s *stream) CreateChild(in chan event.Event) Stream {
 	return &stream{
 		parent: s,
 		events: in,
@@ -124,7 +126,7 @@ func NewStream() Stream {
 		isDone = false
 		ack    = make(chan struct{})
 		done   = make(chan struct{})
-		events = make(chan Event)
+		events = make(chan event.Event)
 	)
 
 	cancel := func() {

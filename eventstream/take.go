@@ -1,11 +1,13 @@
 package eventstream
 
-type Predicate func(Event) bool
+import "github.com/bernos/go-eventstream/eventstream/event"
+
+type Predicate func(event.Event) bool
 
 func Take(n int) Transformer {
 	return TransformerFunc(func(in Stream) Stream {
 		var (
-			ch  = make(chan Event)
+			ch  = make(chan event.Event)
 			out = in.CreateChild(ch)
 		)
 
@@ -35,7 +37,7 @@ func Take(n int) Transformer {
 func TakeWhile(fn Predicate) Transformer {
 	return TransformerFunc(func(in Stream) Stream {
 		var (
-			ch  = make(chan Event)
+			ch  = make(chan event.Event)
 			out = in.CreateChild(ch)
 		)
 
@@ -61,7 +63,7 @@ func TakeWhile(fn Predicate) Transformer {
 func TakeUntil(fn Predicate) Transformer {
 	return TransformerFunc(func(in Stream) Stream {
 		var (
-			ch  = make(chan Event)
+			ch  = make(chan event.Event)
 			out = in.CreateChild(ch)
 		)
 

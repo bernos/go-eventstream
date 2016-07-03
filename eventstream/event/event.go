@@ -1,4 +1,4 @@
-package eventstream
+package event
 
 type Event interface {
 	Value() interface{}
@@ -10,8 +10,16 @@ type event struct {
 	err   error
 }
 
-func NewEvent(value interface{}, err error) Event {
+func New(value interface{}, err error) Event {
 	return event{value, err}
+}
+
+func FromError(err error) Event {
+	return event{nil, err}
+}
+
+func FromValue(value interface{}) Event {
+	return event{value, nil}
 }
 
 func (e event) Value() interface{} {

@@ -2,6 +2,8 @@ package eventstream
 
 import "sync"
 
+import "github.com/bernos/go-eventstream/eventstream/event"
+
 // Merge merges events from Streams a and b and passes them to its
 // output stream. Cancelling the output stream will cancel both a
 // and b. The output stream will close automatically if both a and
@@ -10,7 +12,7 @@ func Merge(in ...Stream) Stream {
 	var (
 		wg     sync.WaitGroup
 		isDone = false
-		ch     = make(chan Event)
+		ch     = make(chan event.Event)
 	)
 
 	cancel := func() {

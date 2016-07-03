@@ -1,5 +1,7 @@
 package eventstream
 
+import "github.com/bernos/go-eventstream/eventstream/event"
+
 type Accumulator interface{}
 
 type Reducer interface {
@@ -15,7 +17,7 @@ func (fn ReducerFunc) Reduce(acc Accumulator, value interface{}) (Accumulator, e
 func Scan(r Reducer) Transformer {
 	return TransformerFunc(func(in Stream) Stream {
 		var (
-			ch  = make(chan Event)
+			ch  = make(chan event.Event)
 			out = in.CreateChild(ch)
 		)
 

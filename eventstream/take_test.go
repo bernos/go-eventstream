@@ -5,6 +5,8 @@ import (
 	"reflect"
 	"testing"
 	"testing/quick"
+
+	"github.com/bernos/go-eventstream/eventstream/event"
 )
 
 func TestTake(t *testing.T) {
@@ -31,7 +33,7 @@ func TestTakeWhile(t *testing.T) {
 		expect   = []interface{}{1, 2, 3}
 	)
 
-	fn := func(e Event) bool {
+	fn := func(e event.Event) bool {
 		return e.Value().(int) < 4
 	}
 
@@ -53,7 +55,7 @@ func TestTakeUntil(t *testing.T) {
 		expect   = []interface{}{1, 2, 3}
 	)
 
-	fn := func(e Event) bool {
+	fn := func(e event.Event) bool {
 		return e.Value().(int) > 3
 	}
 
@@ -88,7 +90,7 @@ func TestTakeUntilOverflow(t *testing.T) {
 
 		// Ensure take func is preceeded by some other transformers
 		// force overflow
-		out := s.Id().Id().TakeUntil(func(e Event) bool {
+		out := s.Id().Id().TakeUntil(func(e event.Event) bool {
 			return e.Value().(int) > want
 		})
 
@@ -112,7 +114,7 @@ func TestTakeWhileOverflow(t *testing.T) {
 
 		// Ensure take func is preceeded by some other transformers
 		// force overflow
-		out := s.Id().Id().TakeWhile(func(e Event) bool {
+		out := s.Id().Id().TakeWhile(func(e event.Event) bool {
 			return e.Value().(int) <= want
 		})
 

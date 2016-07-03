@@ -1,11 +1,15 @@
 package eventstream
 
-import "time"
+import (
+	"time"
+
+	"github.com/bernos/go-eventstream/eventstream/event"
+)
 
 func Throttle(d time.Duration) Transformer {
 	return TransformerFunc(func(in Stream) Stream {
 		var (
-			ch  = make(chan Event)
+			ch  = make(chan event.Event)
 			out = in.CreateChild(ch)
 		)
 

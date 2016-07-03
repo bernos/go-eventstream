@@ -3,13 +3,15 @@ package eventstream
 import (
 	"testing"
 	"time"
+
+	"github.com/bernos/go-eventstream/eventstream/event"
 )
 
 func TestCompose(t *testing.T) {
 	makeTransformer := func(char string) Transformer {
 		return TransformerFunc(func(in Stream) Stream {
 			var (
-				ch  = make(chan Event)
+				ch  = make(chan event.Event)
 				out = in.CreateChild(ch)
 			)
 
