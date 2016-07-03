@@ -1,7 +1,7 @@
 package eventstream
 
 type Generator interface {
-	Generate(chan Event, chan struct{}) error
+	Generate(out chan Event, done chan struct{}) error
 }
 
 type GeneratorFunc func(chan Event, chan struct{}) error
@@ -10,6 +10,7 @@ func (fn GeneratorFunc) Generate(out chan Event, done chan struct{}) error {
 	return fn(out, done)
 }
 
+// FromGenerator creates a new Stream from a Generator
 func FromGenerator(g Generator) Stream {
 	var (
 		isDone = false
@@ -17,34 +18,33 @@ func FromGenerator(g Generator) Stream {
 		done   = make(chan struct{})
 	)
 
-	cancel := func(s *stream) CancelFunc {
-		return func() {
-			if !isDone {
-				isDone = true
-				close(done)
-				<-ack
-			}
+	cancel := func() {
+		if !isDone {
+			isDone = true
+			close(done)
+			<-ack
 		}
 	}
 
-	in := newStream(make(chan Event), nil, cancel)
+	out := newStream(make(chan Event), nil, cancel)
 
 	go func() {
 		defer func() {
-			close(in.events)
+			close(out.events)
 			close(ack)
 		}()
 
-		err := g.Generate(in.events, done)
+		err := g.Generate(out.events, done)
 
 		if err != nil {
-			in.Send(nil, err)
+			out.Send(nil, err)
 		}
 	}()
 
-	return in
+	return out
 }
 
+// FromPoll creates a new Stream by polling the provided function
 func FromPoll(fn func() (interface{}, error)) Stream {
 	return FromGenerator(GeneratorFunc(func(out chan Event, done chan struct{}) error {
 		for {
@@ -57,6 +57,8 @@ func FromPoll(fn func() (interface{}, error)) Stream {
 	}))
 }
 
+// FromSlice creates a new Stream that will emit an event for each item in a slice.
+// Once all the events have been sent the Stream will automatically close
 func FromSlice(xs []interface{}) Stream {
 	return FromGenerator(GeneratorFunc(func(out chan Event, done chan struct{}) error {
 		for i := range xs {
@@ -70,6 +72,7 @@ func FromSlice(xs []interface{}) Stream {
 	}))
 }
 
+// Once creates a new Stream that will emit a single value and then automatically close
 func Once(value interface{}) Stream {
 	return FromGenerator(GeneratorFunc(func(out chan Event, done chan struct{}) error {
 		select {
@@ -80,17 +83,16 @@ func Once(value interface{}) Stream {
 	}))
 }
 
+// FromValues creates a new Stream that will emit an event for each of the arguments
+// and then close
 func FromValues(xs ...interface{}) Stream {
 	return FromSlice(xs)
 }
 
-func newStream(events chan Event, parent Stream, cancel func(*stream) CancelFunc) *stream {
-	s := &stream{
+func newStream(events chan Event, parent Stream, cancel CancelFunc) *stream {
+	return &stream{
 		events: events,
 		parent: parent,
+		cancel: cancel,
 	}
-
-	s.cancel = cancel(s)
-
-	return s
 }

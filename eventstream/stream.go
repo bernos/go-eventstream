@@ -124,26 +124,25 @@ func NewStream() Stream {
 		isDone = false
 		ack    = make(chan struct{})
 		done   = make(chan struct{})
+		events = make(chan Event)
 	)
 
-	cancel := func(s *stream) CancelFunc {
-		return func() {
-			if !isDone {
-				isDone = true
+	cancel := func() {
+		if !isDone {
+			isDone = true
 
-				go func() {
-					defer func() {
-						close(ack)
-						close(s.events)
-					}()
-					<-done
+			go func() {
+				defer func() {
+					close(ack)
+					close(events)
 				}()
+				<-done
+			}()
 
-				close(done)
-				<-ack
-			}
+			close(done)
+			<-ack
 		}
 	}
 
-	return newStream(make(chan Event), nil, cancel)
+	return newStream(events, nil, cancel)
 }

@@ -13,14 +13,12 @@ func Merge(in ...Stream) Stream {
 		ch     = make(chan Event)
 	)
 
-	cancel := func(s *stream) CancelFunc {
-		return func() {
-			if !isDone {
-				isDone = true
+	cancel := func() {
+		if !isDone {
+			isDone = true
 
-				for _, s := range in {
-					s.Cancel()
-				}
+			for _, s := range in {
+				s.Cancel()
 			}
 		}
 	}
