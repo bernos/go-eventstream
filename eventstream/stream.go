@@ -1,8 +1,10 @@
 package eventstream
 
-import "time"
+import (
+	"time"
 
-import "github.com/bernos/go-eventstream/eventstream/event"
+	"github.com/bernos/go-eventstream/eventstream/event"
+)
 
 // Stream represents a continuous source of events
 type Stream interface {
