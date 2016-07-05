@@ -31,19 +31,21 @@ func TakeWhile(fn Predicate) Transformer {
 
 		go func() {
 			defer close(ch)
+
 			done := false
 
 			for e := range in.Events() {
-				if !done && fn(e) {
-					out.Send(e.Value(), e.Error())
-				} else if !done {
-					done = true
-					in.Cancel()
+				if !done {
+					if fn(e) {
+						out.Send(e.Value(), e.Error())
+					} else {
+						done = true
+						in.Cancel()
+					}
 				}
 			}
 		}()
 
 		return out
 	})
-
 }
