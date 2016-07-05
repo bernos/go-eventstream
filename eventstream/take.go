@@ -5,32 +5,20 @@ import "github.com/bernos/go-eventstream/eventstream/event"
 type Predicate func(event.Event) bool
 
 func Take(n int) Transformer {
-	return TransformerFunc(func(in Stream) Stream {
-		var (
-			ch  = make(chan event.Event)
-			out = in.CreateChild(ch)
-		)
-
-		go func() {
-			defer close(ch)
-
-			count := 0
-			done := false
-
-			for e := range in.Events() {
-				if !done {
-					out.Send(e.Value(), e.Error())
-					count++
-				}
-
-				if !done && count == n {
-					done = true
-					in.Cancel()
-				}
+	return TakeWhile(func(x int) Predicate {
+		return func(e event.Event) bool {
+			if x < n {
+				x++
+				return true
 			}
-		}()
+			return false
+		}
+	}(0))
+}
 
-		return out
+func TakeUntil(fn Predicate) Transformer {
+	return TakeWhile(func(e event.Event) bool {
+		return !fn(e)
 	})
 }
 
@@ -51,32 +39,6 @@ func TakeWhile(fn Predicate) Transformer {
 				} else if !done {
 					done = true
 					in.Cancel()
-				}
-			}
-		}()
-
-		return out
-	})
-
-}
-
-func TakeUntil(fn Predicate) Transformer {
-	return TransformerFunc(func(in Stream) Stream {
-		var (
-			ch  = make(chan event.Event)
-			out = in.CreateChild(ch)
-		)
-
-		go func() {
-			defer close(ch)
-			done := false
-
-			for e := range in.Events() {
-				if !done && fn(e) {
-					done = true
-					in.Cancel()
-				} else if !done {
-					out.Send(e.Value(), e.Error())
 				}
 			}
 		}()
