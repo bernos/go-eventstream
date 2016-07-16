@@ -36,7 +36,7 @@ func PMap(m Mapper, n int) Transformer {
 
 				for event := range in.Events() {
 					if event.Error() != nil {
-						out.Send(nil, event.Error())
+						out.Send(event.Value(), event.Error())
 					} else {
 						out.Send(m.Map(event.Value()))
 					}

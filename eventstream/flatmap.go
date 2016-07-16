@@ -33,14 +33,14 @@ func PFlatMap(m FlatMapper, n int) Transformer {
 
 				for event := range in.Events() {
 					if event.Error() != nil {
-						out.Send(nil, event.Error())
+						out.Send(event.Value(), event.Error())
 					} else {
 						if xs, err := m.FlatMap(event.Value()); err == nil {
 							for x := range xs {
 								out.Send(xs[x], nil)
 							}
 						} else {
-							out.Send(nil, err)
+							out.Send(event.Value(), err)
 						}
 					}
 				}

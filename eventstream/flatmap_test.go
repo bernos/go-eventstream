@@ -35,7 +35,7 @@ func TestFlatMapInputError(t *testing.T) {
 
 	go func() {
 		defer input.Cancel()
-		input.Send(nil, fmt.Errorf("test error"))
+		input.Send(2, fmt.Errorf("test error"))
 	}()
 
 	fn := FlatMapperFunc(func(x interface{}) ([]interface{}, error) {
@@ -47,6 +47,9 @@ func TestFlatMapInputError(t *testing.T) {
 	for event := range out.Events() {
 		if event.Error() == nil {
 			t.Errorf("Expected error, but got %v", event)
+		}
+		if event.Value() == nil {
+			t.Errorf("Expected value to be forwarded on error")
 		}
 	}
 }

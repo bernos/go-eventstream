@@ -59,7 +59,7 @@ func TestMapError(t *testing.T) {
 
 	go func() {
 		defer s.Cancel()
-		s.Send(nil, fmt.Errorf("foo"))
+		s.Send(2, fmt.Errorf("foo"))
 	}()
 
 	out := m.Transform(s)
@@ -68,6 +68,9 @@ func TestMapError(t *testing.T) {
 	case e := <-out.Events():
 		if e.Error() == nil {
 			t.Errorf("Expected error, but got %v", e)
+		}
+		if e.Value() == nil {
+			t.Errorf("Expected value to be forwarded on error")
 		}
 	case <-time.After(time.Second):
 		t.Errorf("Timeout waiting for error from stream")
