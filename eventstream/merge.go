@@ -33,8 +33,8 @@ func Merge(in ...Stream) Stream {
 		go func(s Stream) {
 			defer wg.Done()
 
-			for event := range s.Events() {
-				out.Send(event.Value(), event.Error())
+			for e := range s.Events() {
+				out.Send(e)
 			}
 		}(s)
 	}

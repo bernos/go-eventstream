@@ -31,16 +31,16 @@ func PFlatMap(m FlatMapper, n int) Transformer {
 			go func() {
 				defer wg.Done()
 
-				for event := range in.Events() {
-					if event.Error() != nil {
-						out.Send(event.Value(), event.Error())
+				for e := range in.Events() {
+					if e.Error() != nil {
+						out.Send(e)
 					} else {
-						if xs, err := m.FlatMap(event.Value()); err == nil {
+						if xs, err := m.FlatMap(e.Value()); err == nil {
 							for x := range xs {
-								out.Send(xs[x], nil)
+								out.Send(event.New(xs[x], nil))
 							}
 						} else {
-							out.Send(event.Value(), err)
+							out.Send(e.WithError(err))
 						}
 					}
 				}

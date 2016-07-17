@@ -14,7 +14,7 @@ func Filter(fn Predicate) Transformer {
 
 			for e := range in.Events() {
 				if fn(e) {
-					out.Send(e.Value(), e.Error())
+					out.Send(e)
 				}
 			}
 		}()

@@ -38,7 +38,7 @@ func Scan(r Reducer) Transformer {
 					acc, err = r.Reduce(acc, e.Value())
 				}
 
-				out.Send(acc, err)
+				out.Send(event.New(acc, err))
 			}
 		}()
 

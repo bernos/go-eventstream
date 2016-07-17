@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 	"time"
+
+	"github.com/bernos/go-eventstream/eventstream/event"
 )
 
 type IntMapper func(int) int
@@ -30,7 +32,7 @@ func TestMap(t *testing.T) {
 		defer in.Cancel()
 
 		for i := 0; i < max; i++ {
-			in.Send(i, nil)
+			in.Send(event.New(i, nil))
 		}
 	}()
 
@@ -59,7 +61,7 @@ func TestMapError(t *testing.T) {
 
 	go func() {
 		defer s.Cancel()
-		s.Send(2, fmt.Errorf("foo"))
+		s.Send(event.New(2, fmt.Errorf("foo")))
 	}()
 
 	out := m.Transform(s)

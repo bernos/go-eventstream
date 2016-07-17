@@ -39,7 +39,7 @@ func FromGenerator(g Generator) Stream {
 		err := g.Generate(out.events, done)
 
 		if err != nil {
-			out.Send(nil, err)
+			out.Send(event.New(nil, err))
 		}
 	}()
 

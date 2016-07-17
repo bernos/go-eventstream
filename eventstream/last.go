@@ -16,7 +16,7 @@ func Last() Transformer {
 			for e = range in.Events() {
 			}
 
-			out.Send(e.Value(), e.Error())
+			out.Send(e)
 		}()
 
 		return out

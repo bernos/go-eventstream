@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"reflect"
 	"testing"
+
+	"github.com/bernos/go-eventstream/eventstream/event"
 )
 
 func TestFlatMap(t *testing.T) {
@@ -35,7 +37,7 @@ func TestFlatMapInputError(t *testing.T) {
 
 	go func() {
 		defer input.Cancel()
-		input.Send(2, fmt.Errorf("test error"))
+		input.Send(event.New(2, fmt.Errorf("test error")))
 	}()
 
 	fn := FlatMapperFunc(func(x interface{}) ([]interface{}, error) {
@@ -61,7 +63,7 @@ func TestFlatMapError(t *testing.T) {
 
 	go func() {
 		defer input.Cancel()
-		input.Send("foo", nil)
+		input.Send(event.New("foo", nil))
 	}()
 
 	fn := FlatMapperFunc(func(x interface{}) ([]interface{}, error) {

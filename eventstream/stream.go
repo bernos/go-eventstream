@@ -9,7 +9,7 @@ import (
 // Stream represents a continuous source of events
 type Stream interface {
 	Events() <-chan event.Event
-	Send(interface{}, error)
+	Send(event.Event)
 	Cancel()
 	CreateChild(chan event.Event) Stream
 
@@ -94,8 +94,8 @@ func (s *stream) Events() <-chan event.Event {
 	return s.events
 }
 
-func (s *stream) Send(value interface{}, err error) {
-	s.events <- event.New(value, err)
+func (s *stream) Send(e event.Event) {
+	s.events <- e
 }
 
 func (s *stream) Throttle(d time.Duration) Stream {

@@ -19,7 +19,7 @@ func TestCompose(t *testing.T) {
 				defer close(ch)
 
 				for e := range in.Events() {
-					out.Send(e.Value().(string)+char, nil)
+					out.Send(event.New(e.Value().(string)+char, nil))
 				}
 			}()
 
@@ -31,7 +31,7 @@ func TestCompose(t *testing.T) {
 
 	go func() {
 		defer s.Cancel()
-		s.Send("a", nil)
+		s.Send(event.New("a", nil))
 	}()
 
 	out := makeTransformer("b").

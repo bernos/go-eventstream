@@ -37,7 +37,7 @@ func TakeWhile(fn Predicate) Transformer {
 			for e := range in.Events() {
 				if !done {
 					if fn(e) {
-						out.Send(e.Value(), e.Error())
+						out.Send(e)
 					} else {
 						done = true
 						in.Cancel()

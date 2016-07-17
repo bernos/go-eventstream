@@ -18,8 +18,8 @@ func Throttle(d time.Duration) Transformer {
 			ticker := time.NewTicker(d)
 			defer ticker.Stop()
 
-			for event := range in.Events() {
-				out.Send(event.Value(), event.Error())
+			for e := range in.Events() {
+				out.Send(e)
 				<-ticker.C
 			}
 		}()

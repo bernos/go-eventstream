@@ -41,7 +41,7 @@ func TestScanInputError(t *testing.T) {
 
 	go func() {
 		defer input.Cancel()
-		input.Send(nil, fmt.Errorf("test error"))
+		input.Send(event.New(nil, fmt.Errorf("test error")))
 	}()
 
 	out := Scan(fn).Transform(input)

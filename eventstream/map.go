@@ -34,11 +34,11 @@ func PMap(m Mapper, n int) Transformer {
 			go func() {
 				defer wg.Done()
 
-				for event := range in.Events() {
-					if event.Error() != nil {
-						out.Send(event.Value(), event.Error())
+				for e := range in.Events() {
+					if e.Error() != nil {
+						out.Send(e)
 					} else {
-						out.Send(m.Map(event.Value()))
+						out.Send(event.New(m.Map(e.Value())))
 					}
 				}
 			}()
