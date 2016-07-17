@@ -3,6 +3,8 @@ package event
 type Event interface {
 	Value() interface{}
 	Error() error
+	WithValue(interface{}) Event
+	WithError(error) Event
 }
 
 type event struct {
@@ -28,4 +30,12 @@ func (e event) Value() interface{} {
 
 func (e event) Error() error {
 	return e.err
+}
+
+func (e event) WithValue(value interface{}) Event {
+	return New(value, e.Error())
+}
+
+func (e event) WithError(err error) Event {
+	return New(e.Value(), err)
 }
