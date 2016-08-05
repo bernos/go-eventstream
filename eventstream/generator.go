@@ -1,6 +1,10 @@
 package eventstream
 
-import "github.com/bernos/go-eventstream/eventstream/event"
+import (
+	"sync"
+
+	"github.com/bernos/go-eventstream/eventstream/event"
+)
 
 type Generator interface {
 	Generate(out chan event.Event, done chan struct{}) error
@@ -15,8 +19,8 @@ func (fn GeneratorFunc) Generate(out chan event.Event, done chan struct{}) error
 // FromGenerator creates a new Stream from a Generator
 func FromGenerator(g Generator) Stream {
 	var (
+		wg     sync.WaitGroup
 		isDone = false
-		ack    = make(chan struct{})
 		done   = make(chan struct{})
 	)
 
@@ -24,23 +28,24 @@ func FromGenerator(g Generator) Stream {
 		if !isDone {
 			isDone = true
 			close(done)
-			<-ack
+			wg.Wait()
 		}
 	}
 
 	out := newStream(make(chan event.Event), nil, cancel)
 
+	wg.Add(1)
+
 	go func() {
-		defer func() {
-			close(out.events)
-			close(ack)
-		}()
+		defer wg.Done()
 
 		err := g.Generate(out.events, done)
 
 		if err != nil {
 			out.Send(event.New(nil, err))
 		}
+
+		close(out.events)
 	}()
 
 	return out

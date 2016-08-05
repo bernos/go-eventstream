@@ -1,6 +1,6 @@
 # go-eventstream
 
-[![Build Status](https://travis-ci.org/bernos/go-eventstream.svg?branch=master)](https://travis-ci.org/bernos/go-eventstream)&nbsp;[![GoDoc](https://godoc.org/github.com/bernos/go-eventstream?status.svg)](https://godoc.org/github.com/bernos/go-eventstream)
+[![Build Status](https://travis-ci.org/bernos/go-eventstream.svg?branch=master)](https://travis-ci.org/bernos/go-eventstream)&nbsp;[![GoDoc](https://godc.org/github.com/bernos/go-eventstream?status.svg)](https://godoc.org/github.com/bernos/go-eventstream)
 
 A package for creating composable concurrent event streams. 
 
