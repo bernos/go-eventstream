@@ -73,7 +73,7 @@ func TestTakeUntil(t *testing.T) {
 func makeRandomIntStream(seed int64) (int, Stream) {
 	r := rand.New(rand.NewSource(seed))
 
-	xs := make([]interface{}, r.Intn(10000))
+	xs := make([]interface{}, r.Intn(10000)+1000)
 
 	for i := 0; i < len(xs); i++ {
 		xs[i] = i
@@ -90,7 +90,7 @@ func TestTakeUntilOverflow(t *testing.T) {
 
 		// Ensure take func is preceeded by some other transformers
 		// force overflow
-		out := s.Id().Id().TakeUntil(func(e event.Event) bool {
+		out := s.Id().Id().Id().TakeUntil(func(e event.Event) bool {
 			return e.Value().(int) > want
 		})
 

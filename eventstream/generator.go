@@ -90,11 +90,3 @@ func Once(value interface{}) Stream {
 func FromValues(xs ...interface{}) Stream {
 	return FromSlice(xs)
 }
-
-func newStream(events chan event.Event, parent Stream, cancel CancelFunc) *stream {
-	return &stream{
-		events: events,
-		parent: parent,
-		cancel: cancel,
-	}
-}

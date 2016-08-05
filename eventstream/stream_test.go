@@ -1,7 +1,9 @@
 package eventstream
 
 import (
+	"fmt"
 	"testing"
+	"testing/quick"
 	"time"
 
 	"github.com/bernos/go-eventstream/eventstream/event"
@@ -96,6 +98,40 @@ func TestFromSliceCancel(t *testing.T) {
 	if count != max {
 		t.Errorf("Want 5 values, got %d", count)
 	}
+
+}
+
+func TestCancel(t *testing.T) {
+	run := 1
+
+	f := func(x int64) bool {
+		n, s := makeRandomIntStream(x)
+		max := 0
+		want := int(n / 2)
+
+		out := s.Id().Id().Id().Id()
+
+		for event := range out.Events() {
+			if max < want {
+				max = event.Value().(int)
+			} else {
+				out.Cancel()
+			}
+		}
+
+		if max != want {
+			fmt.Printf("Want %d, got %d on run %d", want, max, run)
+		}
+
+		run++
+		return max == want
+	}
+
+	if err := quick.Check(f, nil); err != nil {
+		t.Error(err)
+	}
+
+	fmt.Printf("Ran %d times", run)
 }
 
 func TestCancelChild(t *testing.T) {

@@ -1,6 +1,7 @@
 package eventstream
 
 import (
+	"sync"
 	"time"
 
 	"github.com/bernos/go-eventstream/eventstream/event"
@@ -125,8 +126,8 @@ func (s *stream) CreateChild(in chan event.Event) Stream {
 // NewStream creates a new stream
 func NewStream() Stream {
 	var (
+		wg     sync.WaitGroup
 		isDone = false
-		ack    = make(chan struct{})
 		done   = make(chan struct{})
 		events = make(chan event.Event)
 	)
@@ -134,19 +135,27 @@ func NewStream() Stream {
 	cancel := func() {
 		if !isDone {
 			isDone = true
-
+			wg.Add(1)
 			go func() {
 				defer func() {
-					close(ack)
+					wg.Done()
 					close(events)
 				}()
 				<-done
 			}()
 
 			close(done)
-			<-ack
+			wg.Wait()
 		}
 	}
 
 	return newStream(events, nil, cancel)
+}
+
+func newStream(events chan event.Event, parent Stream, cancel CancelFunc) *stream {
+	return &stream{
+		events: events,
+		parent: parent,
+		cancel: cancel,
+	}
 }
