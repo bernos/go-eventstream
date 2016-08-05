@@ -178,6 +178,9 @@ func TestDefaultCancel(t *testing.T) {
 func TestMultipleCancel(t *testing.T) {
 	s := NewStream()
 
-	s.Cancel()
-	s.Cancel()
+	go s.Cancel()
+	go s.Cancel()
+	go s.Cancel()
+	go s.Cancel()
+	go s.Cancel()
 }
