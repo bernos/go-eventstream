@@ -8,21 +8,6 @@ import (
 	"github.com/bernos/go-eventstream/eventstream/event"
 )
 
-type IntMapper func(int) int
-
-func (m IntMapper) Map(value interface{}) (interface{}, error) {
-	if x, ok := value.(int); ok {
-		return m(x), nil
-	}
-	return nil, fmt.Errorf("IntMapper expects int value from stream")
-}
-
-func Add(x int) Mapper {
-	return IntMapper(func(y int) int {
-		return x + y
-	})
-}
-
 func TestMap(t *testing.T) {
 	in := NewStream()
 	max := 5

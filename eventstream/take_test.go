@@ -1,7 +1,6 @@
 package eventstream
 
 import (
-	"math/rand"
 	"reflect"
 	"testing"
 	"testing/quick"
@@ -70,21 +69,9 @@ func TestTakeUntil(t *testing.T) {
 	}
 }
 
-func makeRandomIntStream(seed int64) (int, Stream) {
-	r := rand.New(rand.NewSource(seed))
-
-	xs := make([]interface{}, r.Intn(10000)+1000)
-
-	for i := 0; i < len(xs); i++ {
-		xs[i] = i
-	}
-
-	return len(xs), FromSlice(xs)
-}
-
 func TestTakeUntilOverflow(t *testing.T) {
 	f := func(x int64) bool {
-		n, s := makeRandomIntStream(x)
+		n, s := MakeRandomIntStream(x)
 		max := 0
 		want := int(n / 2)
 
@@ -108,7 +95,7 @@ func TestTakeUntilOverflow(t *testing.T) {
 
 func TestTakeWhileOverflow(t *testing.T) {
 	f := func(x int64) bool {
-		n, s := makeRandomIntStream(x)
+		n, s := MakeRandomIntStream(x)
 		max := 0
 		want := int(n / 2)
 
@@ -132,7 +119,7 @@ func TestTakeWhileOverflow(t *testing.T) {
 
 func TestTakeOverflow(t *testing.T) {
 	f := func(x int64) bool {
-		n, s := makeRandomIntStream(x)
+		n, s := MakeRandomIntStream(x)
 		max := 0
 		want := int(n / 2)
 

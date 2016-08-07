@@ -13,7 +13,7 @@ func TestCancel(t *testing.T) {
 	run := 1
 
 	f := func(x int64) bool {
-		n, s := makeRandomIntStream(x)
+		n, s := MakeRandomIntStream(x)
 		max := 0
 		want := int(n / 2)
 

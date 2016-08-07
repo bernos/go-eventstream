@@ -9,7 +9,7 @@ func TestReduce(t *testing.T) {
 	var (
 		received int
 		count    int
-		input    = FromSlice([]interface{}{1, 2, 3, 4, 5})
+		input    = IntStream(1, 5)
 		expect   = 15
 	)
 

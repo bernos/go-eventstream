@@ -10,7 +10,7 @@ import (
 func TestFilter(t *testing.T) {
 	var (
 		received []interface{}
-		input    = FromSlice([]interface{}{1, 2, 3, 4, 5})
+		input    = IntStream(1, 5)
 		expect   = []interface{}{1, 2, 3}
 	)
 

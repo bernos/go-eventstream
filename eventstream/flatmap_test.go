@@ -11,7 +11,7 @@ import (
 func TestFlatMap(t *testing.T) {
 	var (
 		received []interface{}
-		input    = FromSlice([]interface{}{1, 2, 3})
+		input    = IntStream(1, 3)
 		expect   = []interface{}{1, 1, 2, 2, 3, 3}
 	)
 
