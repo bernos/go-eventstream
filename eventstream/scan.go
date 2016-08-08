@@ -24,16 +24,11 @@ func Scan(r Reducer, acc Accumulator) Transformer {
 		go func() {
 			defer close(ch)
 
-			var (
-				// acc interface{}
-				err error
-			)
+			var err error
 
 			for e := range in.Events() {
 				if e.Error() != nil {
 					err = e.Error()
-					// } else if acc == nil {
-					// 	acc = e.Value()
 				} else {
 					acc, err = r.Reduce(acc, e.Value())
 				}

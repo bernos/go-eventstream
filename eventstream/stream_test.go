@@ -38,8 +38,6 @@ func TestCancel(t *testing.T) {
 	if err := quick.Check(f, nil); err != nil {
 		t.Error(err)
 	}
-
-	fmt.Printf("Ran %d times", run)
 }
 
 func TestCancelChild(t *testing.T) {
