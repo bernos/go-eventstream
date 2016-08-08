@@ -9,17 +9,8 @@ import (
 )
 
 func TestMap(t *testing.T) {
-	in := NewStream()
-	max := 5
+	in := IntStream(0, 5)
 	transform := Map(Add(2))
-
-	go func() {
-		defer in.Cancel()
-
-		for i := 0; i < max; i++ {
-			in.Send(event.New(i, nil))
-		}
-	}()
 
 	out := transform.Transform(in)
 	count := 0
@@ -34,6 +25,42 @@ func TestMap(t *testing.T) {
 		}
 		count++
 	}
+
+	in.Cancel()
+}
+
+func TestPMap(t *testing.T) {
+	n := 5
+
+	mapper := MapperFunc(func(x interface{}) (interface{}, error) {
+		time.Sleep(time.Second)
+		return x, nil
+	})
+
+	in := IntStream(1, n)
+	transform := PMap(mapper, n)
+
+	out := transform.Transform(in)
+	start := time.Now().UTC()
+
+	var result []interface{}
+
+	for event := range out.Events() {
+		for i := range result {
+			if result[i] == event.Value() {
+				t.Errorf("Already saw %v", event.Value())
+			}
+		}
+		result = append(result, event.Value())
+	}
+
+	duration := time.Since(start)
+
+	if duration > time.Second*time.Duration(n) {
+		t.Errorf("Expected < %d, got %s", n, duration)
+	}
+
+	in.Cancel()
 }
 
 func TestMapError(t *testing.T) {
@@ -55,9 +82,6 @@ func TestMapError(t *testing.T) {
 	case e := <-out.Events():
 		if e.Error() == nil {
 			t.Errorf("Expected error, but got %v", e)
-		}
-		if e.Value() == nil {
-			t.Errorf("Expected value to be forwarded on error")
 		}
 	case <-time.After(time.Second):
 		t.Errorf("Timeout waiting for error from stream")
