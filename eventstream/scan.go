@@ -14,7 +14,7 @@ func (fn ReducerFunc) Reduce(acc Accumulator, value interface{}) (Accumulator, e
 	return fn(acc, value)
 }
 
-func Scan(r Reducer) Transformer {
+func Scan(r Reducer, acc Accumulator) Transformer {
 	return TransformerFunc(func(in Stream) Stream {
 		var (
 			ch  = make(chan event.Event)
@@ -25,15 +25,15 @@ func Scan(r Reducer) Transformer {
 			defer close(ch)
 
 			var (
-				acc interface{}
+				// acc interface{}
 				err error
 			)
 
 			for e := range in.Events() {
 				if e.Error() != nil {
 					err = e.Error()
-				} else if acc == nil {
-					acc = e.Value()
+					// } else if acc == nil {
+					// 	acc = e.Value()
 				} else {
 					acc, err = r.Reduce(acc, e.Value())
 				}

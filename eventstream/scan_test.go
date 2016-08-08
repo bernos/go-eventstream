@@ -19,7 +19,7 @@ func TestScan(t *testing.T) {
 		return acc.(int) + value.(int), nil
 	})
 
-	out := Scan(fn).Transform(input)
+	out := Scan(fn, 0).Transform(input)
 
 	for event := range out.Events() {
 		received = append(received, event.Value())
@@ -44,7 +44,7 @@ func TestScanInputError(t *testing.T) {
 		input.Send(event.New(nil, fmt.Errorf("test error")))
 	}()
 
-	out := Scan(fn).Transform(input)
+	out := Scan(fn, nil).Transform(input)
 
 	for event := range out.Events() {
 		if event.Error() == nil {
@@ -65,7 +65,7 @@ func BenchmarkScan(b *testing.B) {
 	})
 
 	for n := 0; n < b.N; n++ {
-		out := Scan(fn).Transform(input)
+		out := Scan(fn, 1).Transform(input)
 
 		for event := range out.Events() {
 			result = event

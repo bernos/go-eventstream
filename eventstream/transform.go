@@ -13,8 +13,8 @@ type Transformer interface {
 	Last() Transformer
 	Map(Mapper) Transformer
 	PMap(Mapper, int) Transformer
-	Reduce(Reducer) Transformer
-	Scan(Reducer) Transformer
+	Reduce(Reducer, Accumulator) Transformer
+	Scan(Reducer, Accumulator) Transformer
 	Take(int) Transformer
 	TakeWhile(Predicate) Transformer
 	TakeUntil(Predicate) Transformer
@@ -59,12 +59,12 @@ func (t TransformerFunc) PMap(m Mapper, n int) Transformer {
 	return t.Compose(PMap(m, n))
 }
 
-func (t TransformerFunc) Reduce(r Reducer) Transformer {
-	return t.Compose(Reduce(r))
+func (t TransformerFunc) Reduce(r Reducer, acc Accumulator) Transformer {
+	return t.Compose(Reduce(r, acc))
 }
 
-func (t TransformerFunc) Scan(r Reducer) Transformer {
-	return t.Compose(Scan(r))
+func (t TransformerFunc) Scan(r Reducer, acc Accumulator) Transformer {
+	return t.Compose(Scan(r, acc))
 }
 
 func (t TransformerFunc) Take(n int) Transformer {

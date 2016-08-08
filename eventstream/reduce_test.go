@@ -17,7 +17,7 @@ func TestReduce(t *testing.T) {
 		return acc.(int) + value.(int), nil
 	})
 
-	out := Reduce(fn).Transform(input)
+	out := Reduce(fn, 0).Transform(input)
 
 	for event := range out.Events() {
 		count++

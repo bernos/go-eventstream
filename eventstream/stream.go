@@ -22,8 +22,8 @@ type Stream interface {
 	Last() Stream
 	Map(Mapper) Stream
 	PMap(Mapper, int) Stream
-	Reduce(Reducer) Stream
-	Scan(Reducer) Stream
+	Reduce(Reducer, Accumulator) Stream
+	Scan(Reducer, Accumulator) Stream
 	Take(int) Stream
 	TakeUntil(Predicate) Stream
 	TakeWhile(Predicate) Stream
@@ -71,12 +71,12 @@ func (s *stream) PMap(m Mapper, n int) Stream {
 	return PMap(m, n).Transform(s)
 }
 
-func (s *stream) Reduce(r Reducer) Stream {
-	return Reduce(r).Transform(s)
+func (s *stream) Reduce(r Reducer, acc Accumulator) Stream {
+	return Reduce(r, acc).Transform(s)
 }
 
-func (s *stream) Scan(r Reducer) Stream {
-	return Scan(r).Transform(s)
+func (s *stream) Scan(r Reducer, acc Accumulator) Stream {
+	return Scan(r, acc).Transform(s)
 }
 
 func (s *stream) Take(n int) Stream {
